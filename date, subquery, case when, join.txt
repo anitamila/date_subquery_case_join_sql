@@ -1,0 +1,308 @@
+select * from `dqlab-boootcamp.data_analytic.super store`;
+
+---- membuat tabel baru customer profile yang isinya diambil dari tabel superstore
+create table `dqlab-boootcamp.data_analytic.customer_pofile` as
+select customer_id, customer_name, postal_code, product_id, order_date, ship_date
+from `dqlab-boootcamp.data_analytic.super store`;
+
+select * from `dqlab-boootcamp.data_analytic.customer_pofile`;
+
+---- membuat tabel baru customer location yang isinya diambil dari tabel superstore
+create table `dqlab-boootcamp.data_analytic.customer_location` as
+select postal_code, city, state, country_region, region
+from `dqlab-boootcamp.data_analytic.super store`
+group by 1,2,3,4,5;
+
+select * from `dqlab-boootcamp.data_analytic.customer_location`;
+
+---- membuat tabel baru product catalog yang isinya diambil dari tabel superstore
+create table `dqlab-boootcamp.data_analytic.product_catalog` as
+select product_id, category, sub_category, product_name
+from `dqlab-boootcamp.data_analytic.super store`
+group by 1,2,3,4;
+
+select * from `dqlab-boootcamp.data_analytic.product_catalog`;
+
+---- membuat tabel baru customer segment yang isinya diambil dari tabel superstore
+create table `dqlab-boootcamp.data_analytic.customer_segment` as
+select customer_name, segment
+from `dqlab-boootcamp.data_analytic.super store`
+group by 1,2;
+
+select * from `dqlab-boootcamp.data_analytic.customer_segment`;
+
+------- LET'S EXPLORE DATA
+------ Query SELECT and WHERE + SHORTING
+----- PRODUCT CATALOG
+select * from `dqlab-boootcamp.data_analytic.product_catalog`;
+---- menampilkan sub_category secara uniq
+select distinct sub_category from `dqlab-boootcamp.data_analytic.product_catalog`;
+---- menampilkan dan mengurutkan sub_category secara uniq
+select distinct sub_category from `dqlab-boootcamp.data_analytic.product_catalog`
+order by sub_category asc;
+---- menampilkan semua isi tabel dimana sub_category = Art
+select * from `dqlab-boootcamp.data_analytic.product_catalog`
+where sub_category = 'Art';
+
+----- CUSTOMER PROFILE
+select * from `dqlab-boootcamp.data_analytic.customer_pofile`;
+---- menampilkan semua isi tabel dimana order_date = 2017-08-30
+---- yang artinya WHERE juga bisa di tipe int tdk hanya string
+select * from `dqlab-boootcamp.data_analytic.customer_pofile`
+where order_date = date '2017-08-30';
+---- 
+select * from `dqlab-boootcamp.data_analytic.customer_pofile`
+where order_date < date '2017-08-30';
+---- menampilkan semua isi tabel dimana product id mengandung kata OFF
+select * from `dqlab-boootcamp.data_analytic.customer_pofile`
+where product_id like '%OFF%';
+---- menampilkan semua isi tabel dimana product id tidak mengandung kata OFF
+select * from `dqlab-boootcamp.data_analytic.customer_pofile`
+where product_id not like '%OFF%'
+
+------ Query AGGREGATION + HAVING
+----- CUSTOMER PROFILE
+select order_date
+, count(*) as total_trx
+from `dqlab-boootcamp.data_analytic.customer_pofile`
+where product_id like '%OFF%' and order_date > date '2017-08-30'
+group by order_date
+order by order_date asc;
+----
+select order_date
+, count(*) as total_trx
+from `dqlab-boootcamp.data_analytic.customer_pofile`
+where product_id like '%OFF%' and order_date > date '2017-08-30'
+group by order_date
+--- dimana hasil dari total trx >10
+having total_trx > 10
+order by order_date asc;
+
+------ Query FUNCTION CURRENT DATE
+select current_date() as the_date;
+
+------ Query FUNCTION DATE()
+select
+  DATE(2016, 12, 25) as date_ymd,
+  DATE(DATETIME '2016-12-25 23:59:59') as date_dt,
+  DATE(TIMESTAMP '2016-12-25 05:30:00+07', 'America/Los_Angeles') as date_tstz
+;
+
+------ Query FUNCTION DATE_ADD()
+select
+  date_add(DATE '2023-10-22', interval 5 day) as fivedayslater,
+  date_add(DATE '2023-10-22', interval 10 day) as tendayslater,
+  date_add(DATE '2023-10-22', interval -10 day) as tendayback
+;
+
+select
+  date_add(DATE '2023-10-22', interval -1 month) as a_month_back,
+  date_add(DATE '2023-10-22', interval -2 week) as two_weeks_back,
+  date_add(DATE '2023-10-22', interval 1 year) as a_year_later
+;
+
+------ Query FUNCTION DATE_DIFF()
+select
+  date_diff(DATE '2023-10-25', DATE '2023-10-23', day) as days_diff,
+  date_diff(DATE '2023-10-25', DATE '2023-10-23', week) as weeks_diff,
+  date_diff(DATE '2023-10-25', DATE '2023-09-20', month) as month_diff,
+  date_diff(DATE '2023-10-25', DATE '2020-10-20', year) as year_diff
+;
+
+select
+  date_diff('2023-10-25', '2023-10-23', week) as weeks_diff,
+  date_diff('2023-10-25', '2023-10-23', week(wednesday)) as week_weekday_diff
+;
+
+------ Query FUNCTION DATE_SUB()
+select date_sub(DATE '2008-12-25', interval 5 day) as five_days_ago;
+
+
+select 
+  date_sub(DATE '2023-10-22', interval 5 day) as five_days_ago,
+  date_add(DATE '2023-10-22', interval -5 day) as five_days_ago
+;
+
+------ Query FUNCTION EXTRACT DATE
+SELECT 
+  extract(DAY from DATE '2023-10-23') as the_day,
+  extract(WEEK from DATE '2023-10-23') as the_week,
+  extract(MONTH from DATE '2023-10-23') as the_month,
+  extract(YEAR from DATE '2023-10-23') as the_year
+;
+
+SELECT 
+  extract(DAY from DATE '2023-10-23') as the_day,
+  extract(DAY from current_date()) as the_day
+;
+
+------ Query FUNCTION FORMAT DATE
+select format_date('%x', DATE '2008-12-25') as us_format;
+
+select format_date('%b-%d-%Y', DATE '2008-12-25') as formatted;
+
+------ Query FUNCTION PARSE DATE
+select parse_date('%A %b %e %Y', 'Thursday Dec 25 2008');
+
+select parse_date('%A %b %e %Y', 'Thursday Dec 25 2008') as the_date;
+
+select parse_date('%A %b %e %Y', 'Thursday Dec 25 2008') as the_date;
+
+select parse_date('%F', '2000-12-30') as the_date;
+
+------ Query FUNCTION DATETIME()
+select
+  datetime(2008, 12, 25, 05, 30, 00) as datetime_ymdhms,
+  datetime(TIMESTAMP "2008-12-25 05:30:00+00", "America/Los_Angeles") as datetime_tstz
+;
+
+------ Query FUNCTION DATETIME_ADD()
+select
+  datetime("2008-12-25 05:30:00") as original_date,
+  datetime_add(datetime "2008-12-25 05:30:00", interval 10 minute) as later
+;
+
+------ Query FUNCTION DATETIME_DIFF()
+select
+  datetime("2010-07-07 10:20:00") as first_datetime,
+  datetime("2008-12-25 15:30:00") as second_datetime,
+  datetime_diff(datetime "2010-07-07 10:20:00", datetime "2008-12-25 15:30:00", day) as difference
+;
+
+
+select
+  datetime_diff(datetime "2017-10-15 00:00:00", datetime "2017-10-15 00:00:00", day) as days_diff,
+  datetime_diff(datetime "2017-10-15 00:00:00", datetime "2017-10-15 00:00:00", week) as weeks_diff
+;
+
+select
+  date_diff(DATE '2023-10-25', DATE '2023-10-23', day) as days_diff,
+  date_diff(DATE '2023-10-25', DATE '2023-10-20', week) as weeks_diff,
+  date_diff(DATE '2023-10-25', DATE '2023-09-20', month) as month_diff,
+  date_diff(DATE '2023-10-25', DATE '2020-10-20', year) as year_diff
+;
+
+select
+  datetime_diff(datetime "2017-10-15 00:00:00", datetime "2017-10-14 00:00:00", day) as days_diff,
+  datetime_diff(datetime "2017-10-15 00:00:00", datetime "2017-10-14 00:00:00", week) as weeks_diff
+;
+
+------ Query FUNCTION DATE()
+select
+  DATE(2016, 12, 25) as date_ymd,
+  DATE(DATETIME '2016-12-25 23:59:59') as date_dt,
+  DATE(TIMESTAMP '2016-12-25 05:30:00+07', 'America/Los_Angeles') as date_tstz;
+  
+------ Query FUNCTION DATE_ADD + DATE_DIFF
+select customer_id, product_id, order_date, ship_date
+, date_add(ship_date, interval 10 day) as tendayslater_from_ship_date
+, date_add(ship_date, interval 2 month) as twomonthslater_from_ship_date
+, date_add(ship_date, interval 1 year) as ayearlater_from_ship_date
+, date_diff(ship_date, order_date, day) as days_diff
+from `dqlab-boootcamp.data_analytic.customer_pofile`;
+
+------ Query FUNCTION DATE_SUB + DATE_DIFF
+select customer_id, product_id, order_date, ship_date
+, date_sub(ship_date, interval 10 day) as tendayslater_from_ship_date
+, date_sub(ship_date, interval 2 month) as twomonthslater_from_ship_date
+, date_sub(ship_date, interval 1 year) as ayearlater_from_ship_date
+, date_diff(ship_date, order_date, day) as days_diff
+from `dqlab-boootcamp.data_analytic.customer_pofile`;
+
+------ Query FUNCTION EXTRACT DATE
+SELECT customer_id
+, ship_date
+, extract(DAY from ship_date) as ship_date_day
+, extract(WEEK from ship_date) as ship_date_WEEK
+, extract(MONTH from ship_date) as ship_date_MONTH
+, extract(YEAR from ship_date) as ship_date_YEAR
+FROM `dqlab-boootcamp.data_analytic.customer_pofile`
+limit 10 ;
+
+------ SUB QUERY
+select * 
+from `dqlab-boootcamp.data_analytic.super store`
+where Ship_Mode = "Standard Class";
+
+select Product_Name, Sub_Category, City 
+from `dqlab-boootcamp.data_analytic.super store`
+where Postal_Code in (50701, 43017, 44052)
+order by Sub_Category;
+
+select Product_Name, Sub_Category, City 
+from `dqlab-boootcamp.data_analytic.super store`
+where Postal_Code in (select Postal_Code 
+from `dqlab-boootcamp.data_analytic.super store`
+where Ship_Mode = "Standard Class")
+order by Sub_Category;
+
+------ QUERY CASE WHEN
+select Sub_Category, Sales,
+CASE
+  WHEN Sales > 100 THEN 'The sales is greater than 100'
+  WHEN Sales = 100 THEN 'The sales is 100'
+  ELSE 'The sales is under 100'
+end as SalesText
+from `dqlab-boootcamp.data_analytic.super store`;
+
+------ Query LEFT JOIN
+----- PRODUCT CATALOG
+select * from `dqlab-boootcamp.data_analytic.product_catalog`;
+---- left join table customer profile & table product catalog
+select t1.*, t2.category, t2.sub_category, t2.product_name
+from `dqlab-boootcamp.data_analytic.customer_pofile` t1
+left join `dqlab-boootcamp.data_analytic.product_catalog` t2
+on t1.product_id = t2.product_id;
+
+select * from `dqlab-boootcamp.data_analytic.customer_location`;
+---- right join all table customer profile & table customer location
+select t1.*, t2.city, t2.country_region, t2.region
+from `dqlab-boootcamp.data_analytic.customer_pofile` t1
+right join `dqlab-boootcamp.data_analytic.customer_location` t2
+on t1.postal_code = t2.postal_code;
+
+---- left join all table t1 t2 t3 t4
+select t1.*
+, t2.category, t2.sub_category, t2.product_name
+, t3.city, t3.state, t3.country_region, t3.region
+, t4.segment
+from `dqlab-boootcamp.data_analytic.customer_pofile` t1
+left join `dqlab-boootcamp.data_analytic.product_catalog` t2 on t1.product_id = t2.product_id
+left join `dqlab-boootcamp.data_analytic.customer_location` t3 on t1.postal_code = t3.postal_code
+left join `dqlab-boootcamp.data_analytic.customer_segment` t4 on t1.customer_name = t4.customer_name
+;
+
+------ Query INNER JOIN
+select t1.customer_id, t1.customer_name, t2.segment
+from `dqlab-boootcamp.data_analytic.customer_pofile` t1
+inner join `dqlab-boootcamp.data_analytic.customer_segment` t2
+on t1.customer_name = t2.customer_name;
+
+---- menggabungkan tabel dimana segment=consumer
+select t1.customer_id, t1.customer_name, t2.segment
+from `dqlab-boootcamp.data_analytic.customer_pofile` t1
+inner join 
+  (select * from `dqlab-boootcamp.data_analytic.customer_segment` 
+  where segment='Consumer') t2
+on t1.customer_name = t2.customer_name;
+
+------ Query FULL OUTER JOIN
+select t1.postal_code, t3.product_name
+from `dqlab-boootcamp.data_analytic.customer_pofile` t1
+full outer join `dqlab-boootcamp.data_analytic.product_catalog` t3
+on t1.product_id = t3.product_id;
+
+------ Query CROSS JOIN
+select * from
+  (
+    select distinct customer_name
+    from `dqlab-boootcamp.data_analytic.customer_pofile`
+    where customer_name in ('Annie Thurman','Ben Ferrer','Henry Goldwyn')
+  ) t0
+  cross join
+  (
+    select distinct product_id
+    from `dqlab-boootcamp.data_analytic.customer_pofile`
+    where product_id in ('OFF-BI-10002432','TEC-PH-10004447','OFF-BI-10000285')
+  ) t1
+;
